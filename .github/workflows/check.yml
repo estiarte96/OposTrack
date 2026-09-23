@@ -1,0 +1,35 @@
+name: Comprovacio Diaria Oposicions
+on:
+  schedule:
+    # Se ejecuta a las 07:00 UTC (09:00 hora peninsular)
+    - cron: '0 7 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente con un botón
+
+jobs:
+  run-tracker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python
+        uses: setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar librerías
+        run: pip install requests beautifulsoup4
+
+      - name: Ejecutar rastreador
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python tracker_emergencies.py
+
+      - name: Guardar historial
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add vist_opos.json || true
+          git commit -m "Auto: actualización convocatorias vistas" || true
+          git push || true
